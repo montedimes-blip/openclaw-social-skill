@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>OpenClaw Hybrid Pro</title>
+  <style>
+    body { width: 320px; padding: 15px; font-family: sans-serif; }
+    .card { border: 1px solid #eaeaea; padding: 12px; margin-top: 10px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    .post-btn { background: #0085ff; color: white; border: none; padding: 8px 10px; width: 100%; cursor: pointer; border-radius: 5px; margin-top: 8px; font-weight: bold;}
+    .reject-btn { background: #ff4d4d; color: white; border: none; padding: 8px 10px; width: 100%; cursor: pointer; border-radius: 5px; margin-top: 10px; font-weight: bold;}
+    .gen-btn { background: #0f1419; color: white; border: none; padding: 10px; width: 100%; cursor: pointer; border-radius: 5px; font-weight: bold; margin-bottom: 5px;}
+    input { width: 90%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px;}
+    
+    /* New Settings Menu Styles */
+    #settingsMenu { display: none; background: #f8f9fa; border: 1px solid #ddd; padding: 10px; border-radius: 5px; margin-bottom: 10px; }
+    .save-btn { background: #28a745; color: white; border: none; padding: 6px; width: 100%; cursor: pointer; border-radius: 4px; font-weight: bold;}
+  </style>
+</head>
+<body>
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+    <h3 style="margin: 0;">OpenClaw Social</h3>
+    <span style="cursor:pointer; font-size: 18px;" id="settingsIcon">⚙️</span>
+  </div>
+  
+  <div id="settingsMenu">
+    <label style="font-size: 12px; font-weight: bold;">Bluesky Handle</label>
+    <input type="text" id="bskyHandle" placeholder="e.g. montydimes.bsky.social">
+    
+    <label style="font-size: 12px; font-weight: bold;">App Password</label>
+    <input type="password" id="bskyPassword" placeholder="abcd-1234-efgh-5678">
+    
+    <button id="saveCredsBtn" class="save-btn">Save to Local Vault</button>
+    <div id="saveMsg" style="color: green; font-size: 12px; margin-top: 5px; text-align: center;"></div>
+  </div>
+  
+  <input type="text" id="nicheInput" placeholder="Niche (leave blank for Top Story)">
+  <button id="generateBtn" class="gen-btn">Generate Drafts</button>
+  <button id="clearBtn" class="reject-btn">Reject All Drafts</button>
+  
+  <div id="results"></div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
