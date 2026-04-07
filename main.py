@@ -138,31 +138,6 @@ async def post_to_bluesky(request: PostToBlueskyRequest):
 # ==========================================
 # 2. REPLY & ENGAGEMENT PIPELINE
 # ==========================================
-@app.post("/get-unread-replies")
-async def get_unread_replies(request: AuthRequest):
-    try:
-        client = Client()
-        client.login(request.handle, request.app_password)
-        
-        # Fetch recent notifications
-        response = client.app.bsky.notification.list_notifications()
-        
-        replies = []
-        for notif in response.notifications:
-            # Filter for actual replies to your posts that haven't been read
-            if notif.reason == 'reply' and not notif.is_read:
-                replies.append({
-                    "text": notif.record.text,
-                    "author": notif.author.handle,
-                    "uri": notif.uri,
-                    "cid": notif.cid
-                })
-                
-        return {"replies": replies}
-    except Exception as e:
-        print(f"Fetch replies error: {e}")
-        return {"error": str(e)}
-
 @app.post("/generate-reply-drafts")
 async def generate_reply_drafts(request: ReplyDraftRequest):
     try:
@@ -207,8 +182,7 @@ async def get_unread_replies(request: AuthRequest):
         
         replies = []
         for notif in response.notifications:
-            # REMOVED the "not notif.is_read" check. 
-            # Now it grabs recent replies even if you already saw them on the Bluesky app.
+            # Grabs recent replies even if you already saw them on the Bluesky app.
             if notif.reason == 'reply':
                 replies.append({
                     "text": notif.record.text,
@@ -222,6 +196,36 @@ async def get_unread_replies(request: AuthRequest):
     except Exception as e:
         print(f"Fetch replies error: {e}")
         return {"error": str(e)}
+
+# THIS IS THE MISSING ROUTE THAT FIXES THE 404 ERROR
+@app.post("/send-reply")
+async def send_reply(request: SendReplyRequest):
+    print(f"Attempting to reply to CID: {request.parent_cid}")
+    try:
+        client = Client()
+        client.login(request.handle, request.app_password)
+        
+        # Bluesky requires a "ReplyRef" to thread conversations together
+        reply_ref = models.AppBskyFeedPost.ReplyRef(
+            parent=models.ComAtprotoRepoStrongRef.Main(
+                cid=request.parent_cid, 
+                uri=request.parent_uri
+            ),
+            root=models.ComAtprotoRepoStrongRef.Main(
+                cid=request.parent_cid, 
+                uri=request.parent_uri
+            )
+        )
+        
+        # Send the post attached to the specific comment
+        client.send_post(
+            text=request.text,
+            reply_to=reply_ref
+        )
+        return {"status": "success", "message": "Reply posted!"}
+    except Exception as e:
+        print(f"Reply error: {e}")
+        return {"status": "error", "message": str(e)}
 
 if __name__ == "__main__":
     import uvicorn
