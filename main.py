@@ -2,7 +2,7 @@ import os
 import requests
 import urllib.parse
 import xml.etree.ElementTree as ET
-from datetime import datetime
+from datetime import datetime, timezone
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -182,8 +182,8 @@ async def get_unread_replies(request: AuthRequest):
         
         replies = []
         for notif in response.notifications:
-            # Grabs recent replies even if you already saw them on the Bluesky app.
-            if notif.reason == 'reply':
+            # FIXED: Added the 'is_read' check back in
+            if notif.reason == 'reply' and not notif.is_read:
                 replies.append({
                     "text": notif.record.text,
                     "author": notif.author.handle,
@@ -191,13 +191,12 @@ async def get_unread_replies(request: AuthRequest):
                     "cid": notif.cid
                 })
                 
-        # Return only the 5 most recent replies so the extension UI stays clean
+        # Return only the 5 most recent unread replies
         return {"replies": replies[:5]}
     except Exception as e:
         print(f"Fetch replies error: {e}")
         return {"error": str(e)}
 
-# THIS IS THE MISSING ROUTE THAT FIXES THE 404 ERROR
 @app.post("/send-reply")
 async def send_reply(request: SendReplyRequest):
     print(f"Attempting to reply to CID: {request.parent_cid}")
@@ -222,6 +221,11 @@ async def send_reply(request: SendReplyRequest):
             text=request.text,
             reply_to=reply_ref
         )
+        
+        # NEW FIX: Tell Bluesky to mark notifications as "Read" up to this exact moment
+        now = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+        client.app.bsky.notification.update_seen({'seen_at': now})
+        
         return {"status": "success", "message": "Reply posted!"}
     except Exception as e:
         print(f"Reply error: {e}")
