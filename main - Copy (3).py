@@ -8,7 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from groq import Groq
-from atproto import Client, models
+from atproto import Client
 
 # Load Keys from .env
 load_dotenv()
@@ -27,9 +27,7 @@ app.add_middleware(
 # Initialize Groq Client
 groq_client = Groq(api_key=GROQ_API_KEY)
 
-# ==========================================
-# DATA STRUCTURES
-# ==========================================
+# Data structures
 class PostRequest(BaseModel):
     niche: str
 
@@ -38,24 +36,6 @@ class PostToBlueskyRequest(BaseModel):
     app_password: str
     text: str
 
-class AuthRequest(BaseModel):
-    handle: str
-    app_password: str
-
-class ReplyDraftRequest(BaseModel):
-    comment_text: str
-
-class SendReplyRequest(BaseModel):
-    handle: str
-    app_password: str
-    text: str
-    parent_uri: str
-    parent_cid: str
-
-
-# ==========================================
-# 1. CORE GENERATION & POSTING
-# ==========================================
 @app.post("/generate-drafts")
 async def generate_drafts(request: PostRequest):
     print(f"Generating drafts for niche: '{request.niche}'")
@@ -133,95 +113,6 @@ async def post_to_bluesky(request: PostToBlueskyRequest):
     except Exception as e:
         print(f"Post error: {e}")
         return {"status": "error", "message": str(e)}
-
-
-# ==========================================
-# 2. REPLY & ENGAGEMENT PIPELINE
-# ==========================================
-@app.post("/get-unread-replies")
-async def get_unread_replies(request: AuthRequest):
-    try:
-        client = Client()
-        client.login(request.handle, request.app_password)
-        
-        # Fetch recent notifications
-        response = client.app.bsky.notification.list_notifications()
-        
-        replies = []
-        for notif in response.notifications:
-            # Filter for actual replies to your posts that haven't been read
-            if notif.reason == 'reply' and not notif.is_read:
-                replies.append({
-                    "text": notif.record.text,
-                    "author": notif.author.handle,
-                    "uri": notif.uri,
-                    "cid": notif.cid
-                })
-                
-        return {"replies": replies}
-    except Exception as e:
-        print(f"Fetch replies error: {e}")
-        return {"error": str(e)}
-
-@app.post("/generate-reply-drafts")
-async def generate_reply_drafts(request: ReplyDraftRequest):
-    try:
-        completion = groq_client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=[
-                {
-                    "role": "system", 
-                    "content": """You are a witty, engaging social media manager based in the US.
-                    You are replying to a user's comment on your post.
-                    
-                    CRITICAL RULES:
-                    - Keep it short, punchy, and conversational (under 150 characters).
-                    - Match the vibe of the user (if they are joking, joke back. If they ask a question, answer it).
-                    - Use native American English slang if appropriate.
-                    - Do NOT be defensive or rude.
-                    - Max 1 emoji.
-                    - Only output the exact text of the reply. 
-                    - Separate 3 draft options with a | character. No intro or outro text."""
-                },
-                {
-                    "role": "user", 
-                    "content": f"User's comment to reply to: {request.comment_text}"
-                }
-            ]
-        )
-        raw_content = completion.choices[0].message.content
-        drafts = [p.strip()[:150] for p in raw_content.split('|') if p.strip()]
-        return {"drafts": drafts}
-    except Exception as e:
-        print(f"AI Reply Error: {e}")
-        return {"error": str(e)}
-
-@app.post("/get-unread-replies")
-async def get_unread_replies(request: AuthRequest):
-    try:
-        client = Client()
-        client.login(request.handle, request.app_password)
-        
-        # Fetch recent notifications
-        response = client.app.bsky.notification.list_notifications()
-        
-        replies = []
-        for notif in response.notifications:
-            # REMOVED the "not notif.is_read" check. 
-            # Now it grabs recent replies even if you already saw them on the Bluesky app.
-            if notif.reason == 'reply':
-                replies.append({
-                    "text": notif.record.text,
-                    "author": notif.author.handle,
-                    "uri": notif.uri,
-                    "cid": notif.cid
-                })
-                
-        # Return only the 5 most recent replies so the extension UI stays clean
-        return {"replies": replies[:5]}
-    except Exception as e:
-        print(f"Fetch replies error: {e}")
-        return {"error": str(e)}
 
 if __name__ == "__main__":
     import uvicorn

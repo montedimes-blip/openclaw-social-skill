@@ -1,24 +1,18 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
   <title>OpenClaw Hybrid Pro</title>
   <style>
     body { width: 320px; padding: 15px; font-family: sans-serif; }
     .card { border: 1px solid #eaeaea; padding: 12px; margin-top: 10px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-    .comment-card { background: #f4f8fa; border-left: 3px solid #1da1f2; }
     .post-btn { background: #0085ff; color: white; border: none; padding: 8px 10px; width: 100%; cursor: pointer; border-radius: 5px; margin-top: 8px; font-weight: bold;}
     .reject-btn { background: #ff4d4d; color: white; border: none; padding: 8px 10px; width: 100%; cursor: pointer; border-radius: 5px; margin-top: 10px; font-weight: bold;}
     .gen-btn { background: #0f1419; color: white; border: none; padding: 10px; width: 100%; cursor: pointer; border-radius: 5px; font-weight: bold; margin-bottom: 5px;}
-    .fetch-btn { background: #1da1f2; color: white; border: none; padding: 10px; width: 100%; cursor: pointer; border-radius: 5px; font-weight: bold; margin-bottom: 5px;}
     input { width: 90%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px;}
     
-    /* Settings Menu & Tabs */
+    /* New Settings Menu Styles */
     #settingsMenu { display: none; background: #f8f9fa; border: 1px solid #ddd; padding: 10px; border-radius: 5px; margin-bottom: 10px; }
     .save-btn { background: #28a745; color: white; border: none; padding: 6px; width: 100%; cursor: pointer; border-radius: 4px; font-weight: bold;}
-    .tab-container { display: flex; margin-bottom: 15px; border-bottom: 2px solid #eaeaea; }
-    .tab { flex: 1; text-align: center; padding: 8px; cursor: pointer; font-weight: bold; color: #666; }
-    .tab.active { color: #0085ff; border-bottom: 2px solid #0085ff; margin-bottom: -2px; }
   </style>
 </head>
 <body>
@@ -30,28 +24,19 @@
   <div id="settingsMenu">
     <label style="font-size: 12px; font-weight: bold;">Bluesky Handle</label>
     <input type="text" id="bskyHandle" placeholder="e.g. montydimes.bsky.social">
+    
     <label style="font-size: 12px; font-weight: bold;">App Password</label>
     <input type="password" id="bskyPassword" placeholder="abcd-1234-efgh-5678">
+    
     <button id="saveCredsBtn" class="save-btn">Save to Local Vault</button>
     <div id="saveMsg" style="color: green; font-size: 12px; margin-top: 5px; text-align: center;"></div>
   </div>
-
-  <div class="tab-container">
-    <div id="tabNew" class="tab active">New Post</div>
-    <div id="tabReplies" class="tab">Replies</div>
-  </div>
   
-  <div id="newPostSection">
-    <input type="text" id="nicheInput" placeholder="Niche (leave blank for Top Story)">
-    <button id="generateBtn" class="gen-btn">Generate Drafts</button>
-    <button id="clearBtn" class="reject-btn">Reject All Drafts</button>
-    <div id="results"></div>
-  </div>
-
-  <div id="repliesSection" style="display: none;">
-    <button id="fetchRepliesBtn" class="fetch-btn">Check Unread Replies</button>
-    <div id="replyResults"></div>
-  </div>
+  <input type="text" id="nicheInput" placeholder="Niche (leave blank for Top Story)">
+  <button id="generateBtn" class="gen-btn">Generate Drafts</button>
+  <button id="clearBtn" class="reject-btn">Reject All Drafts</button>
+  
+  <div id="results"></div>
 
   <script src="popup.js"></script>
 </body>
